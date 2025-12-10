@@ -10,29 +10,57 @@ import os
 # ----------------------------------
 @st.cache_resource
 def load_model():
+    model_path = "trained_plant_disease_model.h5"
+    
     try:
-        # Try multiple possible paths
-        model_paths = [
-            "trained_plant_disease_model.h5",
-            "./trained_plant_disease_model.h5",
-            os.path.join(os.path.dirname(__file__), "trained_plant_disease_model.h5")
-        ]
+        # Check if model exists locally
+        if not os.path.exists(model_path):
+            st.info("📥 Model file not found locally. Attempting to download...")
+            
+            # Google Drive direct download link (replace FILE_ID with your actual file ID)
+            # To get FILE_ID: Share your file -> Get link -> Extract ID from URL
+            # URL format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+            google_drive_file_id = "YOUR_FILE_ID_HERE"
+            
+            if google_drive_file_id == "YOUR_FILE_ID_HERE":
+                raise FileNotFoundError(
+                    f"⚠️ Model file '{model_path}' not found!\n\n"
+                    f"**How to fix this:**\n\n"
+                    f"**Option A - Upload to GitHub:**\n"
+                    f"1. Place 'trained_plant_disease_model.h5' in your repo root\n"
+                    f"2. For files >100MB, install Git LFS:\n"
+                    f"   ```\n"
+                    f"   git lfs install\n"
+                    f"   git lfs track '*.h5'\n"
+                    f"   git add .gitattributes trained_plant_disease_model.h5\n"
+                    f"   git commit -m 'Add model file'\n"
+                    f"   git push\n"
+                    f"   ```\n\n"
+                    f"**Option B - Host on Google Drive:**\n"
+                    f"1. Upload model to Google Drive\n"
+                    f"2. Right-click -> Share -> Anyone with link can view\n"
+                    f"3. Copy the FILE_ID from the URL\n"
+                    f"4. Update line 16 in app.py with your FILE_ID\n\n"
+                    f"**Option C - Use Hugging Face:**\n"
+                    f"Upload to Hugging Face Hub and download via their API"
+                )
+            
+            # Download from Google Drive
+            import gdown
+            url = f"https://drive.google.com/uc?id={google_drive_file_id}"
+            
+            with st.spinner("Downloading model... This may take a few minutes."):
+                gdown.download(url, model_path, quiet=False)
+            
+            st.success("✅ Model downloaded successfully!")
         
-        model = None
-        for path in model_paths:
-            if os.path.exists(path):
-                model = tf.keras.models.load_model(path, compile=False)
-                st.success(f"Model loaded successfully from: {path}")
-                return model
+        # Load the model
+        model = tf.keras.models.load_model(model_path, compile=False)
+        st.success(f"✅ Model loaded successfully!")
+        return model
         
-        # If no model found, raise error
-        raise FileNotFoundError(
-            f"Model file not found. Searched in: {model_paths}\n"
-            f"Current directory: {os.getcwd()}\n"
-            f"Files in current directory: {os.listdir('.')}"
-        )
     except Exception as e:
-        st.error(f"Error loading model: {str(e)}")
+        st.error(f"❌ Error loading model: {str(e)}")
         return None
 
 model = load_model()
